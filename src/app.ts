@@ -20,11 +20,12 @@ app.use(express.json());
 app.get('/', (_, res) => {
   res.status(200).send('Welcome to SkillReactor');
 });
+
+//Retrieve blood record by Id
 app.get('/get-blood/id/:id', async (req: Request, res: Response) => {
   let client;
   try {
     const id = parseInt(req.params.id);
-    console.log('typeof params', typeof id);
     client = await pool.connect();
     const result = await client.query(
       `SELECT * FROM bloodbankmanagementapi_sql_user_nasrullah WHERE id = ${id}`
@@ -46,5 +47,32 @@ app.get('/get-blood/id/:id', async (req: Request, res: Response) => {
     }
   }
 });
+
+//Retrieve blood records by hospital
+app.get(
+  '/get-blood/hospital/:hospital',
+  async (req: Request, res: Response) => {
+    let client;
+    try {
+      const hospital = req.params.hospital;
+      // console.log('hospital=>', hospital);
+      client = await pool.connect();
+      const result = await client.query(
+        `SELECT * FROM bloodbankmanagementapi_sql_user_nasrullah WHERE hospital = $1`,
+        [hospital]
+      );
+      res.status(200).json(result.rows);
+      // console.log('hospials=>', result.rows);
+    } catch (err) {
+      console.error('Error executing query', err);
+      res.status(500).send('Internal Server Error');
+    } finally {
+      if (client) {
+        // Ensure the client is released back to the pool even if an error occurs
+        client.release();
+      }
+    }
+  }
+);
 
 export default app;
