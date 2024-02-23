@@ -20,15 +20,18 @@ app.use(express.json());
 app.get('/', (_, res) => {
   res.status(200).send('Welcome to SkillReactor');
 });
-app.get('/get-blood', async (req: Request, res: Response) => {
+app.get('/get-blood/id/:id', async (req: Request, res: Response) => {
   let client;
   try {
+    const id = parseInt(req.params.id);
+    console.log('typeof params', typeof id);
     client = await pool.connect();
     const result = await client.query(
-      'SELECT * FROM bloodbankmanagementapi_sql_user_nasrullah'
+      `SELECT * FROM bloodbankmanagementapi_sql_user_nasrullah WHERE id = ${id}`
     );
 
     console.log('result=>', result.rows);
+    res.status(200).json(result.rows[0]);
   } catch (err) {
     console.error('Error executing query', err);
     res.status(500).send('Internal Server Error');
