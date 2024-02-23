@@ -25,7 +25,7 @@ app.get('/get-blood', async (req: Request, res: Response) => {
   try {
     client = await pool.connect();
     const result = await client.query(
-      'SELECT * FROM bloodbankmanagementsystem_sql_user_nasrullah'
+      'SELECT * FROM bloodbankmanagementapi_sql_user_nasrullah'
     );
 
     console.log('result=>', result.rows);
