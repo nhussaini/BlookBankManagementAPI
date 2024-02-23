@@ -61,6 +61,9 @@ app.get(
         `SELECT * FROM bloodbankmanagementapi_sql_user_nasrullah WHERE hospital = $1`,
         [hospital]
       );
+      if (result.rows.length === 0) {
+        return res.status(400).json({ error: 'hospital record not found' });
+      }
       res.status(200).json(result.rows);
       // console.log('hospials=>', result.rows);
     } catch (err) {
