@@ -30,7 +30,11 @@ app.get('/get-blood/id/:id', async (req: Request, res: Response) => {
       `SELECT * FROM bloodbankmanagementapi_sql_user_nasrullah WHERE id = ${id}`
     );
 
-    console.log('result=>', result.rows);
+    //if id doesn't exist in db
+    if (result.rows.length === 0) {
+      return res.status(400).json({ error: 'Blood record not found' });
+    }
+
     res.status(200).json(result.rows[0]);
   } catch (err) {
     console.error('Error executing query', err);
