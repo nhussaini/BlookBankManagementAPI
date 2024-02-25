@@ -77,5 +77,30 @@ app.get(
     }
   }
 );
+//Retrieve blood records by Time
+app.get('/get-blood/time/:time', async (req: Request, res: Response) => {
+  const time = req.params.time;
+  console.log('time - >', time);
+  let client;
+  try {
+    client = await pool.connect();
+    const result = await client.query(
+      `SELECT * FROM bloodbankmanagementapi_sql_user_nasrullah WHERE date = $1`,
+      [time]
+    );
+    // if (result.rows.length === 0) {
+    //   return res.status(400).json({ error: 'hospital record not found' });
+    // }
+    res.status(200).json(result.rows);
+  } catch (err) {
+    console.error('Error executing query', err);
+    res.status(500).send('Internal Server Error');
+  } finally {
+    if (client) {
+      // Ensure the client is released back to the pool even if an error occurs
+      client.release();
+    }
+  }
+});
 
 export default app;
