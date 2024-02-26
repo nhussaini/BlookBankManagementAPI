@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-interface bloodRecord {
+interface BloodRecord {
   id: number;
   hospital: string;
   date: string;
@@ -91,24 +91,25 @@ app.get(
 //Retrieve blood records by Time
 app.get('/get-blood/time/:time', async (req: Request, res: Response) => {
   const time = req.params.time;
-  // const date = new Date(time);
-  // console.log('date===>', date);
-  // console.log('time - >', time);
   let client;
   try {
     client = await pool.connect();
     const result = await client.query(
       `SELECT * FROM bloodbankmanagementapi_sql_user_nasrullah`
     );
-    const bloodRecordsByTime = [];
-    result.rows.forEach((record) => {
-      console.log('date=>', record.date);
+    const bloodRecordsByTime: BloodRecord[] = [];
+    result.rows.forEach((record: BloodRecord) => {
+      const recordDate = new Date(record.date);
+      const hour = recordDate.getUTCHours();
+      const minute = recordDate.getUTCMinutes();
+      const second = recordDate.getUTCSeconds();
+      const recordTime = `${hour}:${minute}:${second}`;
+      console.log('recordTime->', recordTime);
+      if (recordTime === time) {
+        bloodRecordsByTime.push(record);
+      }
     });
-
-    // if (result.rows.length === 0) {
-    //   return res.status(400).json({ error: 'hospital record not found' });
-    // }
-    res.status(200).json(result.rows);
+    res.status(200).json(bloodRecordsByTime);
   } catch (err) {
     console.error('Error executing query', err);
     res.status(500).send('Internal Server Error');
