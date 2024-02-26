@@ -2,7 +2,18 @@ import express, { Request, Response } from 'express';
 import { Pool } from 'pg';
 import { parse } from 'pg-connection-string';
 import dotenv from 'dotenv';
+
 dotenv.config();
+
+interface bloodRecord {
+  id: number;
+  hospital: string;
+  date: string;
+  blood_type: string;
+  expiry: string;
+  location: string;
+  donator: string;
+}
 
 // Parse connection string
 const connectionString = process.env.DB_CONNECTION_STRING;
@@ -80,14 +91,20 @@ app.get(
 //Retrieve blood records by Time
 app.get('/get-blood/time/:time', async (req: Request, res: Response) => {
   const time = req.params.time;
-  console.log('time - >', time);
+  // const date = new Date(time);
+  // console.log('date===>', date);
+  // console.log('time - >', time);
   let client;
   try {
     client = await pool.connect();
     const result = await client.query(
-      `SELECT * FROM bloodbankmanagementapi_sql_user_nasrullah WHERE date = $1`,
-      [time]
+      `SELECT * FROM bloodbankmanagementapi_sql_user_nasrullah`
     );
+    const bloodRecordsByTime = [];
+    result.rows.forEach((record) => {
+      console.log('date=>', record.date);
+    });
+
     // if (result.rows.length === 0) {
     //   return res.status(400).json({ error: 'hospital record not found' });
     // }
