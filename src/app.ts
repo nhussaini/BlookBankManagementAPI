@@ -121,4 +121,29 @@ app.get('/get-blood/time/:time', async (req: Request, res: Response) => {
   }
 });
 
+//Retrieve blood records by blood type
+app.get('/get-blood/type/:type', async (req: Request, res: Response) => {
+  const bloodType = req.params.type;
+  let client;
+  try {
+    client = await pool.connect();
+    const result = await client.query(
+      `SELECT * FROM bloodbankmanagementapi_sql_user_nasrullah WHERE blood_type = $1`,
+      [bloodType]
+    );
+    if (result.rows.length === 0) {
+      return res.status(400).json({ error: 'hospital record not found' });
+    }
+    res.status(200).json(result.rows);
+  } catch (err) {
+    console.error('Error executing query', err);
+    res.status(500).send('Internal Server Error');
+  } finally {
+    if (client) {
+      // Ensure the client is released back to the pool even if an error occurs
+      client.release();
+    }
+  }
+});
+
 export default app;
