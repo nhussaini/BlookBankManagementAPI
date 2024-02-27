@@ -146,12 +146,35 @@ app.get('/get-blood/type/:type', async (req: Request, res: Response) => {
   }
 });
 
+//Retrieve blood records by blood type
+app.get('/get-blood/type/:type', async (req: Request, res: Response) => {
+  const bloodType = req.params.type;
+  let client;
+  try {
+    client = await pool.connect();
+    const result = await client.query(
+      `SELECT * FROM bloodbankmanagementapi_sql_user_nasrullah WHERE blood_type = $1`,
+      [bloodType]
+    );
+    if (result.rows.length === 0) {
+      return res.status(400).json({ error: 'hospital record not found' });
+    }
+    res.status(200).json(result.rows);
+  } catch (err) {
+    console.error('Error executing query', err);
+    res.status(500).send('Internal Server Error');
+  } finally {
+    if (client) {
+      // Ensure the client is released back to the pool even if an error occurs
+      client.release();
+    }
+  }
+});
+
 //to get aggregated information
 app.get('/info', async (req: Request, res: Response) => {
   interface BloodInfo {
     total_blood: number;
-    total_emergencies: number;
-    percentage_emergencies: string;
     blood_per_type: {
       'O Positive': number;
       'O Negative': number;
@@ -159,8 +182,8 @@ app.get('/info', async (req: Request, res: Response) => {
       'A Negative': number;
       'B Positive': number;
       'B Negative': number;
-      'Ab Positive': number;
-      'Ab Negative': number;
+      'AB Positive': number;
+      'AB Negative': number;
     };
   }
   let client;
@@ -169,12 +192,7 @@ app.get('/info', async (req: Request, res: Response) => {
     const result = await client.query(
       `SELECT * FROM bloodbankmanagementapi_sql_user_nasrullah`
     );
-
-    // const info: BloodInfo={};
-    const totalEmergencies = 2;
-    const totalBlood = result.rows.length + totalEmergencies;
-    const percentage_emergencies = totalEmergencies / totalBlood + '%';
-    console.log('percetange emer=>', percentage_emergencies);
+    const totalBlood = result.rows.length;
     const bloodPerType: BloodInfo['blood_per_type'] = {
       'O Positive': 0,
       'O Negative': 0,
@@ -182,29 +200,24 @@ app.get('/info', async (req: Request, res: Response) => {
       'A Negative': 0,
       'B Positive': 0,
       'B Negative': 0,
-      'Ab Positive': 0,
-      'Ab Negative': 0,
+      'AB Positive': 0,
+      'AB Negative': 0,
     };
-    result.rows.forEach((record: BloodRecord) => {
-      console.log('blood type==>', record.blood_type);
-      // if(bloodPerType[record.blood_type])
-      const bloodType = record.blood_type as keyof BloodInfo['blood_per_type'];
-      bloodPerType[bloodType]++;
-      // console.log('bloodperType=>', bloodPerType);
-      // if (bloodPerType[bloodType]) bloodPerType[bloodType]++;
-      // bloodPerType[bloodType]++;
-    });
-    console.log('bloodperType=>', bloodPerType);
+    const bloodTypeDistribution = result.rows.reduce((acc, record) => {
+      acc[record.blood_type] = (acc[record.blood_type] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
 
-    // if (result.rows.length === 0) {
-    //   return res.status(400).json({ error: 'hospital record not found' });
-    // }
-    res.status(200).json({
-      total_blood: totalBlood,
-      total_emergencies: totalEmergencies,
-      percentage_emergencies: percentage_emergencies,
-      blood_per_type: bloodPerType,
-    });
+    Object.keys(bloodPerType).forEach(
+      (bloodType: keyof typeof bloodPerType) => {
+        // if (bloodType in bloodPerType) {
+        bloodPerType[bloodType] = bloodTypeDistribution[bloodType] || 0;
+        // }
+      }
+    );
+    res
+      .status(200)
+      .json({ total_blood: totalBlood, blood_per_type: bloodPerType });
   } catch (err) {
     console.error('Error executing query', err);
     res.status(500).send('Internal Server Error');
