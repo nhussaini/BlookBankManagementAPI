@@ -87,6 +87,7 @@ app.get(
     }
   }
 );
+
 //Retrieve blood records by Time
 app.get('/get-blood/time/:time', async (req: Request, res: Response) => {
   const time = req.params.time;
@@ -94,21 +95,11 @@ app.get('/get-blood/time/:time', async (req: Request, res: Response) => {
   try {
     client = await pool.connect();
     const result = await client.query(
-      `SELECT * FROM bloodbankmanagementapi_sql_user_nasrullah`
+      `SELECT * FROM bloodbankmanagementapi_sql_user_nasrullah WHERE date >= $1`,
+      [time]
     );
-    const bloodRecordsByTime: BloodRecord[] = [];
-    result.rows.forEach((record: BloodRecord) => {
-      const recordDate = new Date(record.date);
-      const hour = recordDate.getUTCHours();
-      const minute = recordDate.getUTCMinutes();
-      const second = recordDate.getUTCSeconds();
-      const recordTime = `${hour}:${minute}:${second}`;
-      console.log('recordTime->', recordTime);
-      if (recordTime === time) {
-        bloodRecordsByTime.push(record);
-      }
-    });
-    res.status(200).json(bloodRecordsByTime);
+    // console.log('result is=>', result.rows);
+    res.status(200).json(result.rows);
   } catch (err) {
     console.error('Error executing query', err);
     res.status(500).send('Internal Server Error');
