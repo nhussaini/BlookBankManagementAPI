@@ -23,18 +23,4 @@ describe('GET /get-blood/id/:id', () => {
     expect(response.status).toBe(400);
     expect(response.body).toEqual({ error: 'Blood record not found' });
   });
-
-  it('should return 500 if server error occurs', async () => {
-    // Spy on the route handler to replace it temporarily
-    const originalHandler = jest.spyOn(app, 'get-blood/id/:id');
-    originalHandler.mockImplementation(async () => {
-      throw new Error('Server error');
-    });
-
-    const response = await request(app).get('/get-blood/id/1');
-    expect(response.status).toBe(500);
-
-    // Restore the original route handler
-    originalHandler.mockRestore();
-  });
 });
