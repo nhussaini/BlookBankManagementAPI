@@ -76,7 +76,6 @@ app.get(
         return res.status(400).json({ error: 'hospital record not found' });
       }
       res.status(200).json(result.rows);
-      // console.log('hospials=>', result.rows);
     } catch (err) {
       console.error('Error executing query', err);
       res.status(500).send('Internal Server Error');
