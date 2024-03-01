@@ -199,10 +199,21 @@ app.post('/update-blood', async (req: Request, res: Response) => {
   const bodyKeys = Object.keys(req.body);
   const fieldToUpdate = bodyKeys[1];
   const value = req.body[fieldToUpdate];
-  console.log('req.body=>', req.body);
+
+  //check if id is in req.body
+  if (!id) {
+    return res.status(400).json({ error: 'No Id was sent!' });
+  }
   let client;
   try {
     client = await pool.connect();
+    //check if id exists
+    const recordExists = await client.query(
+      `SELECT * FROM bloodbankmanagementapi_sql_user_nasrullah WHERE id = ${id}`
+    );
+    if (recordExists.rows.length === 0) {
+      return res.status(400).json({ error: "id doesn't exist!" });
+    }
     // Update the record in the database
     const result = await pool.query(
       `UPDATE bloodbankmanagementapi_sql_user_nasrullah SET ${fieldToUpdate} = $1 WHERE id = $2 RETURNING *`,
