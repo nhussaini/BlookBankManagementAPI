@@ -210,6 +210,9 @@ app.post('/update-blood', async (req: Request, res: Response) => {
   }
   let client;
   try {
+    // Set CORS headers
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', '*');
     client = await pool.connect();
     //check if id exists
     const recordExists = await client.query(
