@@ -192,30 +192,30 @@ app.get('/info', async (req: Request, res: Response) => {
     }
   }
 });
+
 //POST endpoint to update  a single field in an existing blood bank record
 app.post('/update-blood', async (req: Request, res: Response) => {
-  console.log('reached this route');
-  // const id = Number(req.params.id);
   const id = parseInt(req.body.id);
-  const hospital = req.body.hospital;
-  console.log('id', id);
-  console.log('hospital=>', hospital);
+  const bodyKeys = Object.keys(req.body);
+  const fieldToUpdate = bodyKeys[1];
+  const value = req.body[fieldToUpdate];
+  console.log('req.body=>', req.body);
   let client;
   try {
     client = await pool.connect();
     // Update the record in the database
     const result = await pool.query(
-      `UPDATE bloodbankmanagementapi_sql_user_nasrullah SET hospital = $1 WHERE id = $2 RETURNING *`,
-      [hospital, id]
+      `UPDATE bloodbankmanagementapi_sql_user_nasrullah SET ${fieldToUpdate} = $1 WHERE id = $2 RETURNING *`,
+      [value, id]
     );
     if (result.rowCount === 0) {
       return res.status(404).json({ error: 'Blood bank record not found.' });
     }
 
-    return res.json({
-      message: 'Blood bank record updated successfully.',
-      updatedRecord: result.rows[0],
-    });
+    return res.json(
+      // message: 'Blood bank record updated successfully.',
+      result.rows[0]
+    );
   } catch (err) {
     console.error('Error executing query', err);
     res.status(500).send('Internal Server Error');
