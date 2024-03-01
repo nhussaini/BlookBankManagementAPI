@@ -245,4 +245,42 @@ app.post('/update-blood', async (req: Request, res: Response) => {
   }
 });
 
+//Insret new blood donation
+app.post('/donate', async (req: Request, res: Response) => {
+  console.log('req.body============>', req.body);
+  const { hospital, type, location, donator } = req.body;
+  // Generate a random number greater than 20
+  const id = Math.floor(Math.random() * 80) + 21;
+  //current date
+  const currentDate = new Date();
+  //expiry date
+  // Add 22 years to today's date
+  const futureDate = new Date(
+    currentDate.getFullYear() + 22,
+    currentDate.getMonth(),
+    currentDate.getDate()
+  );
+  // Format the future date as a string
+  const formattedFutureDate = futureDate.toISOString();
+
+  let client;
+  try {
+    client = await pool.connect();
+    const result = await client.query(
+      `INSERT INTO bloodbankmanagementapi_sql_user_nasrullah (id,hospital, date,blood_type,expiry,location, donator) VALUES ($1, $2, $3, $4,$5, $6,$7) RETURNING *`,
+      [id, hospital, currentDate, type, formattedFutureDate, location, donator]
+    );
+    console.log('blood info added=>', result.rows[0]);
+    res.status(200).json(result.rows[0]);
+  } catch (err) {
+    console.error('Error executing query', err);
+    res.status(500).send('Internal Server Error');
+  } finally {
+    if (client) {
+      // Ensure the client is released back to the pool even if an error occurs
+      client.release();
+    }
+  }
+});
+
 export default app;
