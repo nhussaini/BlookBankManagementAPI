@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import { Pool } from 'pg';
 import { parse } from 'pg-connection-string';
+import cors from 'cors';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -35,6 +36,9 @@ const pool = new Pool({
 
 const app = express();
 app.use(express.json());
+
+// Enable CORS for all origins and methods
+app.use(cors());
 
 app.get('/', (_, res) => {
   res.status(200).send('Welcome to SkillReactor');
