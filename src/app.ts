@@ -282,4 +282,43 @@ app.post('/donate', async (req: Request, res: Response) => {
   }
 });
 
+//Delete a single Record
+app.post('/delete-blood', async (req: Request, res: Response) => {
+  // console.log('reached delete route');
+  const id = parseInt(req.body.id);
+  let client;
+  //check if id is in req.body
+  if (!id) {
+    return res.status(400).json({ error: 'No Id was sent!' });
+  }
+
+  try {
+    client = await pool.connect();
+    //check if id exists
+    const recordExists = await client.query(
+      `SELECT * FROM bloodbankmanagementapi_sql_user_nasrullah WHERE id = ${id}`
+    );
+    if (recordExists.rows.length === 0) {
+      return res.status(400).json({ error: "id doesn't exist!" });
+    }
+
+    const result = await client.query(
+      `DELETE FROM bloodbankmanagementapi_sql_user_nasrullah WHERE id = $1 RETURNING *`,
+      [id]
+    );
+    res.json({
+      message: 'Blood record deleted successfully.',
+      record: result.rows[0],
+    });
+  } catch (err) {
+    console.error('Error executing query', err);
+    res.status(500).send('Internal Server Error');
+  } finally {
+    if (client) {
+      // Ensure the client is released back to the pool even if an error occurs
+      client.release();
+    }
+  }
+});
+
 export default app;
