@@ -325,4 +325,35 @@ app.post('/delete-blood', async (req: Request, res: Response) => {
   }
 });
 
+//Delete expired Records
+app.post('/clean-blood', async (req: Request, res: Response) => {
+  let client;
+  try {
+    const expiryDate = req.body.expiry;
+    console.log('req.body=>', req.body.expiry);
+    // Set CORS headers
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', '*');
+
+    client = await pool.connect();
+
+    const result = await client.query(
+      `DELETE FROM bloodbankmanagementapi_sql_user_nasrullah WHERE date < $1 RETURNING *`,
+      [expiryDate]
+    );
+    res.json({
+      message: 'Expired record(s) deleted successfully.',
+      record: result.rows,
+    });
+  } catch (err) {
+    console.error('Error executing query', err);
+    res.status(500).send('Internal Server Error');
+  } finally {
+    if (client) {
+      // Ensure the client is released back to the pool even if an error occurs
+      client.release();
+    }
+  }
+});
+
 export default app;
