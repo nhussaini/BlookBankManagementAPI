@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import { Pool } from 'pg';
 import { parse } from 'pg-connection-string';
+import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 dotenv.config();
@@ -39,6 +40,18 @@ app.use(express.json());
 
 // Enable CORS for all origins and methods
 app.use(cors());
+
+// Connect to MongoDB
+const MONGODB_URI = process.env.MONGODB_URI;
+const DB_NAME = process.env.DB_NAME;
+
+mongoose.connect(`${MONGODB_URI}`);
+// Check MongoDB connection
+const db = mongoose.connection;
+db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+db.once('open', () => {
+  console.log('Connected to MongoDB');
+});
 
 app.get('/', (_, res) => {
   res.status(200).send('Welcome to SkillReactor');
