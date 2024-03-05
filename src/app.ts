@@ -456,4 +456,21 @@ app.get('/emergency/:id', async (req: Request, res: Response) => {
   }
 });
 
+//Remove emergency from MongoDB upon Completion
+app.post('/emergency/complete', async (req: Request, res: Response) => {
+  const { id } = req.body;
+  if (!id) {
+    return res.status(400).json({ msg: 'No Id was provided!' });
+  }
+  try {
+    const removedRecord = await BloodModel.findByIdAndDelete(id);
+    res
+      .status(200)
+      .json({ msg: 'record successfully deleted!', record: removedRecord });
+  } catch (error) {
+    console.error('Error:', error);
+    return res.status(500).send('Internal Server Error');
+  }
+});
+
 export default app;
