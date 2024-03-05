@@ -473,20 +473,35 @@ app.post('/emergency/complete', async (req: Request, res: Response) => {
   }
 });
 
-//Remove emergency from MongoDB upon cancellation
+//Remove emergency from MongoDB upon cancellation and add it to postgres
 app.post('/emergency/cancel', async (req: Request, res: Response) => {
   const { id } = req.body;
   if (!id) {
     return res.status(400).json({ msg: 'No Id was provided!' });
   }
+  let client;
   try {
     const removedRecord = await BloodModel.findByIdAndDelete(id);
-    res
-      .status(200)
-      .json({ msg: 'record successfully deleted!', record: removedRecord });
+    client = await pool.connect();
+    const idToInsert = Math.floor(Math.random() * 80) + 21;
+    const { hospital, date, blood_type, expiry, location, donator } =
+      removedRecord;
+
+    const result = await client.query(
+      `INSERT INTO bloodbankmanagementapi_sql_user_nasrullah (id,hospital, date,blood_type,expiry,location, donator) VALUES ($1, $2, $3, $4,$5, $6,$7) RETURNING *`,
+      [idToInsert, hospital, date, blood_type, expiry, location, donator]
+    );
+    const insertedId = result.rows[0].id;
+
+    return res.status(200).send(insertedId.toString());
   } catch (error) {
     console.error('Error:', error);
     return res.status(500).send('Internal Server Error');
+  } finally {
+    if (client) {
+      // Ensure the client is released back to the pool even if an error occurs
+      client.release();
+    }
   }
 });
 
