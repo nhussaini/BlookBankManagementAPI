@@ -404,19 +404,11 @@ app.post('/emergency/create', async (req: Request, res: Response) => {
     }
 
     client = await pool.connect();
-    // const result = await client.query(
-    //   `SELECT * FROM bloodbankmanagementapi_sql_user_nasrullah WHERE location = $1 AND blood_type=$2`,
-    //   [location, type]
-    // );
     // Retrieve the record with the closest expiry from the SQL blood database
     const result = await client.query(
       `SELECT * FROM bloodbankmanagementapi_sql_user_nasrullah WHERE location = $1 AND blood_type=$2 ORDER BY expiry ASC LIMIT 1`,
       [location, type]
     );
-    console.log('result.rows=>', result.rows);
-    const idToDelete = result.rows[0].id;
-    console.log('idToDelete=', idToDelete);
-    //Map Postgres data to the mongoose model
     const mappedRecord = {
       hospital: result.rows[0].hospital,
       date: new Date(result.rows[0].date).toISOString(), // Convert date to ISO 8601 format
@@ -425,21 +417,11 @@ app.post('/emergency/create', async (req: Request, res: Response) => {
       location: location,
       donator: result.rows[0].donator,
     };
-    // DELETE FROM bloodbankmanagementapi_sql_user_nasrullah WHERE date < $1 RETURNING *
-    // const deletedRecord = await client.query(
-    //   `DELETE FROM bloodbankmanagementapi_sql_user_nasrullah WHERE id =  $1 RETURNING *`,
-    //   [idToDelete]
-    // );
-    // console.log('Deleted Record=>', deletedRecord.rows);
-
-    // console.log('mapped Data=>', mappedRecord);
     // create a new emergency record
     const newEmergency = new BloodModel(mappedRecord);
     const savedEmergencyBlood = await newEmergency.save();
     // Return the new MongoDB object ID as a string
     const emergencyBloodId = savedEmergencyBlood._id.toString();
-    // console.log('type of blood id', typeof emergencyBloodId);
-    // console.log('emergency blood id', emergencyBloodId);
 
     // Delete the closest expiry record from the SQL blood database
     const deletedRecord = await client.query(
@@ -447,8 +429,7 @@ app.post('/emergency/create', async (req: Request, res: Response) => {
       [result.rows[0].id]
     );
     console.log('Deleted Record=>', deletedRecord.rows);
-
-    res.status(200).send(emergencyBloodId);
+    return res.status(200).send(emergencyBloodId);
   } catch (err) {
     console.error('Error executing query', err);
     res.status(500).send('Internal Server Error');
@@ -457,20 +438,6 @@ app.post('/emergency/create', async (req: Request, res: Response) => {
       // Ensure the client is released back to the pool even if an error occurs
       client.release();
     }
-  }
-});
-
-//This route is just for testing for now
-app.get('/data', async (req: Request, res: Response) => {
-  try {
-    console.log('reached this route');
-    const data = await BloodModel.find();
-    console.log('data=>', data);
-    res.json(data);
-  } catch (error) {
-    // Handle errors
-    console.error('Error fetching data:', error);
-    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
