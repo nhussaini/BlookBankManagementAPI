@@ -441,4 +441,16 @@ app.post('/emergency/create', async (req: Request, res: Response) => {
   }
 });
 
+app.get('/emergency/:id', async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id;
+    const emergencyRecord = await BloodModel.findById(id);
+    console.log('emergency record is=>', emergencyRecord);
+    res.status(200).json(emergencyRecord);
+  } catch (error) {
+    console.error('Error:', error);
+    return res.status(500).send('Internal Server Error');
+  }
+});
+
 export default app;
