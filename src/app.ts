@@ -407,9 +407,9 @@ app.post('/emergency/create', async (req: Request, res: Response) => {
     //Map Postgres data to the mongoose model
     const mappedRecord = {
       hospital: result.rows[0].hospital,
-      date: result.rows[0].date,
+      date: new Date(result.rows[0].date).toISOString(), // Convert date to ISO 8601 format
       blood_type: type,
-      expiry: result.rows[0].date,
+      expiry: new Date(result.rows[0].expiry).toISOString(), // Convert expiry date to ISO 8601 format
       location: location,
       donator: result.rows[0].donator,
     };
