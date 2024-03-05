@@ -404,8 +404,13 @@ app.post('/emergency/create', async (req: Request, res: Response) => {
     }
 
     client = await pool.connect();
+    // const result = await client.query(
+    //   `SELECT * FROM bloodbankmanagementapi_sql_user_nasrullah WHERE location = $1 AND blood_type=$2`,
+    //   [location, type]
+    // );
+    // Retrieve the record with the closest expiry from the SQL blood database
     const result = await client.query(
-      `SELECT * FROM bloodbankmanagementapi_sql_user_nasrullah WHERE location = $1 AND blood_type=$2`,
+      `SELECT * FROM bloodbankmanagementapi_sql_user_nasrullah WHERE location = $1 AND blood_type=$2 ORDER BY expiry ASC LIMIT 1`,
       [location, type]
     );
     console.log('result.rows=>', result.rows);
@@ -421,11 +426,11 @@ app.post('/emergency/create', async (req: Request, res: Response) => {
       donator: result.rows[0].donator,
     };
     // DELETE FROM bloodbankmanagementapi_sql_user_nasrullah WHERE date < $1 RETURNING *
-    const deletedRecord = await client.query(
-      `DELETE FROM bloodbankmanagementapi_sql_user_nasrullah WHERE id =  $1 RETURNING *`,
-      [idToDelete]
-    );
-    console.log('Deleted Record=>', deletedRecord.rows);
+    // const deletedRecord = await client.query(
+    //   `DELETE FROM bloodbankmanagementapi_sql_user_nasrullah WHERE id =  $1 RETURNING *`,
+    //   [idToDelete]
+    // );
+    // console.log('Deleted Record=>', deletedRecord.rows);
 
     // console.log('mapped Data=>', mappedRecord);
     // create a new emergency record
@@ -433,8 +438,15 @@ app.post('/emergency/create', async (req: Request, res: Response) => {
     const savedEmergencyBlood = await newEmergency.save();
     // Return the new MongoDB object ID as a string
     const emergencyBloodId = savedEmergencyBlood._id.toString();
-    console.log('type of blood id', typeof emergencyBloodId);
-    console.log('emergency blood id', emergencyBloodId);
+    // console.log('type of blood id', typeof emergencyBloodId);
+    // console.log('emergency blood id', emergencyBloodId);
+
+    // Delete the closest expiry record from the SQL blood database
+    const deletedRecord = await client.query(
+      `DELETE FROM bloodbankmanagementapi_sql_user_nasrullah WHERE id = $1 RETURNING *`,
+      [result.rows[0].id]
+    );
+    console.log('Deleted Record=>', deletedRecord.rows);
 
     res.status(200).send(emergencyBloodId);
   } catch (err) {
