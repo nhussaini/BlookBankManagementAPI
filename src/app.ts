@@ -315,7 +315,6 @@ app.post('/donate', async (req: Request, res: Response) => {
 
 //Delete a single Record
 app.post('/delete-blood', async (req: Request, res: Response) => {
-  // console.log('reached delete route');
   const id = parseInt(req.body.id);
   let client;
   //check if id is in req.body
