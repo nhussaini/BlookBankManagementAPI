@@ -446,6 +446,9 @@ app.get('/emergency/:id', async (req: Request, res: Response) => {
     const id = req.params.id;
     const emergencyRecord = await BloodModel.findById(id);
     console.log('emergency record is=>', emergencyRecord);
+    if (!emergencyRecord) {
+      return res.status(400).json({ error: 'Emergency record not found' });
+    }
     res.status(200).json(emergencyRecord);
   } catch (error) {
     console.error('Error:', error);
