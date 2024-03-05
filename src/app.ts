@@ -396,6 +396,13 @@ app.post('/emergency/create', async (req: Request, res: Response) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', '*');
 
+    //validate if location or type is provided
+    if (!location || !type) {
+      return res
+        .status(400)
+        .json({ error: 'location or blood type not provided!' });
+    }
+
     client = await pool.connect();
     const result = await client.query(
       `SELECT * FROM bloodbankmanagementapi_sql_user_nasrullah WHERE location = $1 AND blood_type=$2`,
